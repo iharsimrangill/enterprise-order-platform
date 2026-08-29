@@ -18,3 +18,5 @@ app:
   kafka:
     topics:
       order-created: orders.created.v1
+      inventory-reserved: inventory.reserved.v1
+      inventory-rejected: inventory.rejected.v1
