@@ -1,5 +1,7 @@
 package com.portfolio.orders.application;
 
+import com.portfolio.orders.application.event.OrderCreatedEvent;
+import com.portfolio.orders.application.port.OrderEventPublisher;
 import com.portfolio.orders.application.port.OrderRepository;
 import com.portfolio.orders.domain.Order;
 import com.portfolio.orders.domain.OrderLine;
@@ -15,17 +17,22 @@ import java.util.UUID;
 public class CreateOrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderEventPublisher orderEventPublisher;
     private final Clock clock;
 
-    
-    
     @Autowired
-    public CreateOrderService(OrderRepository orderRepository) {
-        this(orderRepository, Clock.systemUTC());
+    public CreateOrderService(
+            OrderRepository orderRepository,
+            OrderEventPublisher orderEventPublisher) {
+        this(orderRepository, orderEventPublisher, Clock.systemUTC());
     }
 
-    CreateOrderService(OrderRepository orderRepository, Clock clock) {
+    CreateOrderService(
+            OrderRepository orderRepository,
+            OrderEventPublisher orderEventPublisher,
+            Clock clock) {
         this.orderRepository = Objects.requireNonNull(orderRepository, "orderRepository must not be null");
+        this.orderEventPublisher = Objects.requireNonNull(orderEventPublisher, "orderEventPublisher must not be null");
         this.clock = Objects.requireNonNull(clock, "clock must not be null");
     }
 
@@ -39,6 +46,8 @@ public class CreateOrderService {
                         .toList(),
                 now);
 
-        return orderRepository.save(order);
+        Order persistedOrder = orderRepository.save(order);
+        orderEventPublisher.publish(OrderCreatedEvent.from(persistedOrder));
+        return persistedOrder;
     }
 }

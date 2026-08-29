@@ -1,5 +1,7 @@
 package com.portfolio.orders.application;
 
+import com.portfolio.orders.application.event.OrderCreatedEvent;
+import com.portfolio.orders.application.port.OrderEventPublisher;
 import com.portfolio.orders.application.port.OrderRepository;
 import com.portfolio.orders.domain.Order;
 import com.portfolio.orders.domain.OrderStatus;
@@ -20,10 +22,12 @@ class CreateOrderServiceTest {
     private static final Instant NOW = Instant.parse("2026-08-29T15:30:00Z");
 
     @Test
-    void createsAndPersistsPendingOrderFromCommand() {
+    void createsPersistsAndPublishesPendingOrder() {
         InMemoryOrderRepository repository = new InMemoryOrderRepository();
+        RecordingOrderEventPublisher publisher = new RecordingOrderEventPublisher();
         CreateOrderService service = new CreateOrderService(
                 repository,
+                publisher,
                 Clock.fixed(NOW, ZoneOffset.UTC));
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
         CreateOrderCommand command = new CreateOrderCommand(
@@ -42,6 +46,15 @@ class CreateOrderServiceTest {
         assertThat(order.lines()).hasSize(2);
         assertThat(order.totalAmount()).isEqualByComparingTo("34.99");
         assertThat(repository.savedOrder).isSameAs(order);
+
+        assertThat(publisher.publishedEvent).isNotNull();
+        assertThat(publisher.publishedEvent.eventType()).isEqualTo("order.created");
+        assertThat(publisher.publishedEvent.eventVersion()).isEqualTo(1);
+        assertThat(publisher.publishedEvent.orderId()).isEqualTo(order.id());
+        assertThat(publisher.publishedEvent.customerId()).isEqualTo(customerId);
+        assertThat(publisher.publishedEvent.occurredAt()).isEqualTo(NOW);
+        assertThat(publisher.publishedEvent.totalAmount()).isEqualByComparingTo("34.99");
+        assertThat(publisher.publishedEvent.lines()).hasSize(2);
     }
 
     private static final class InMemoryOrderRepository implements OrderRepository {
@@ -58,6 +71,16 @@ class CreateOrderServiceTest {
         public Optional<Order> findById(UUID id) {
             return Optional.ofNullable(savedOrder)
                     .filter(order -> order.id().equals(id));
+        }
+    }
+
+    private static final class RecordingOrderEventPublisher implements OrderEventPublisher {
+
+        private OrderCreatedEvent publishedEvent;
+
+        @Override
+        public void publish(OrderCreatedEvent event) {
+            this.publishedEvent = event;
         }
     }
 }
