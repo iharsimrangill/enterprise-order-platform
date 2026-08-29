@@ -1,11 +1,14 @@
 package com.portfolio.inventory.infrastructure.memory;
 
 import com.portfolio.inventory.application.port.InventoryAvailabilityPort;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
+@Profile("memory")
 public class InMemoryInventoryAvailabilityAdapter implements InventoryAvailabilityPort {
     private final Map<String, Integer> stock = new ConcurrentHashMap<>();
 
