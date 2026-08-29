@@ -8,6 +8,7 @@ import com.portfolio.inventory.domain.ReservationStatus;
 import com.portfolio.inventory.messaging.event.OrderCreatedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.util.Objects;
@@ -38,7 +39,8 @@ public class ReserveInventoryService {
         this.clock = Objects.requireNonNull(clock);
     }
 
-    public synchronized ReservationProcessingResult handle(OrderCreatedEvent event) {
+    @Transactional
+    public ReservationProcessingResult handle(OrderCreatedEvent event) {
         Objects.requireNonNull(event, "event must not be null");
 
         if (processedEventRepository.exists(event.eventId())) {
