@@ -44,7 +44,10 @@ public class ReserveInventoryService {
         Objects.requireNonNull(event, "event must not be null");
 
         if (processedEventRepository.exists(event.eventId())) {
-            return ReservationProcessingResult.duplicate();
+            var existingReservation = reservationRepository.findByOrderId(event.orderId())
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Processed order event has no persisted reservation: " + event.eventId()));
+            return ReservationProcessingResult.duplicate(existingReservation);
         }
 
         var lines = event.lines().stream()

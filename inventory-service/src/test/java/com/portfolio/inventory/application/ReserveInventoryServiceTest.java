@@ -3,15 +3,19 @@ package com.portfolio.inventory.application;
 import com.portfolio.inventory.application.port.InventoryAvailabilityPort;
 import com.portfolio.inventory.application.port.InventoryReservationRepository;
 import com.portfolio.inventory.application.port.ProcessedEventRepository;
+import com.portfolio.inventory.domain.InventoryReservation;
 import com.portfolio.inventory.domain.ReservationStatus;
 import com.portfolio.inventory.messaging.event.OrderCreatedEvent;
 import org.junit.jupiter.api.Test;
+
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -54,15 +58,24 @@ class ReserveInventoryServiceTest {
     }
 
     @Test
-    void ignoresDuplicateEvents() {
+    void reloadsPersistedReservationForDuplicateEvents() {
         var event = event("SKU-1", 1, "SKU-2", 1);
+        var persisted = new InventoryReservation(
+                event.eventId(),
+                event.orderId(),
+                ReservationStatus.RESERVED,
+                null,
+                clock.instant(),
+                List.of(new InventoryReservation.Line("SKU-1", 1)));
         when(processedEvents.exists(event.eventId())).thenReturn(true);
+        when(reservations.findByOrderId(event.orderId())).thenReturn(Optional.of(persisted));
 
         var result = service.handle(event);
 
         assertThat(result.status()).isEqualTo(ReservationProcessingResult.Status.DUPLICATE);
-        assertThat(result.reservation()).isNull();
-        verifyNoInteractions(availability, reservations);
+        assertThat(result.reservation()).isEqualTo(persisted);
+        verifyNoInteractions(availability);
+        verify(reservations, never()).save(any());
     }
 
     private static OrderCreatedEvent event(String sku1, int qty1, String sku2, int qty2) {
