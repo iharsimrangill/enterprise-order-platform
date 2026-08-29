@@ -27,6 +27,12 @@ spring:
         spring.json.use.type.headers: false
         spring.json.value.default.type: com.portfolio.inventory.messaging.event.OrderCreatedEvent
         spring.json.trusted.packages: com.portfolio.inventory.messaging.event
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      acks: all
+      properties:
+        spring.json.add.type.headers: false
     listener:
       ack-mode: record
 
@@ -34,6 +40,8 @@ app:
   kafka:
     topics:
       order-created: ${ORDER_CREATED_TOPIC:orders.created.v1}
+      inventory-reserved: ${INVENTORY_RESERVED_TOPIC:inventory.reserved.v1}
+      inventory-rejected: ${INVENTORY_REJECTED_TOPIC:inventory.rejected.v1}
 
 server:
   port: 8082
