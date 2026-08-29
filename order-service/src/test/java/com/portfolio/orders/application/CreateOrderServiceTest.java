@@ -1,5 +1,6 @@
 package com.portfolio.orders.application;
 
+import com.portfolio.orders.application.port.OrderRepository;
 import com.portfolio.orders.domain.Order;
 import com.portfolio.orders.domain.OrderStatus;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,8 +20,11 @@ class CreateOrderServiceTest {
     private static final Instant NOW = Instant.parse("2026-08-29T15:30:00Z");
 
     @Test
-    void createsPendingOrderFromCommand() {
-        CreateOrderService service = new CreateOrderService(Clock.fixed(NOW, ZoneOffset.UTC));
+    void createsAndPersistsPendingOrderFromCommand() {
+        InMemoryOrderRepository repository = new InMemoryOrderRepository();
+        CreateOrderService service = new CreateOrderService(
+                repository,
+                Clock.fixed(NOW, ZoneOffset.UTC));
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
         CreateOrderCommand command = new CreateOrderCommand(
                 customerId,
@@ -36,5 +41,23 @@ class CreateOrderServiceTest {
         assertThat(order.updatedAt()).isEqualTo(NOW);
         assertThat(order.lines()).hasSize(2);
         assertThat(order.totalAmount()).isEqualByComparingTo("34.99");
+        assertThat(repository.savedOrder).isSameAs(order);
+    }
+
+    private static final class InMemoryOrderRepository implements OrderRepository {
+
+        private Order savedOrder;
+
+        @Override
+        public Order save(Order order) {
+            this.savedOrder = order;
+            return order;
+        }
+
+        @Override
+        public Optional<Order> findById(UUID id) {
+            return Optional.ofNullable(savedOrder)
+                    .filter(order -> order.id().equals(id));
+        }
     }
 }
