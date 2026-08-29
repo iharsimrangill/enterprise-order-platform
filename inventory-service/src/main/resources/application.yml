@@ -1,6 +1,25 @@
 spring:
   application:
     name: inventory-service
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${INVENTORY_CONSUMER_GROUP:inventory-service-v1}
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.portfolio.inventory.messaging.event.OrderCreatedEvent
+        spring.json.trusted.packages: com.portfolio.inventory.messaging.event
+    listener:
+      ack-mode: record
+
+app:
+  kafka:
+    topics:
+      order-created: ${ORDER_CREATED_TOPIC:orders.created.v1}
 
 server:
   port: 8082
