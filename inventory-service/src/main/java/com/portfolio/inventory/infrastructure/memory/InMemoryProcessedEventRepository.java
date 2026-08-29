@@ -1,12 +1,15 @@
 package com.portfolio.inventory.infrastructure.memory;
 
 import com.portfolio.inventory.application.port.ProcessedEventRepository;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
+
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
+@Profile("memory")
 public class InMemoryProcessedEventRepository implements ProcessedEventRepository {
     private final Set<UUID> processedEvents = ConcurrentHashMap.newKeySet();
 
