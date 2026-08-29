@@ -18,7 +18,7 @@ class KafkaOrderEventPublisherTest {
     @Test
     void publishesEventUsingOrderIdAsKafkaMessageKey() {
         @SuppressWarnings("unchecked")
-        KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate = mock(KafkaTemplate.class);
+        KafkaTemplate<String, Object> kafkaTemplate = mock(KafkaTemplate.class);
         KafkaOrderEventPublisher publisher = new KafkaOrderEventPublisher(
                 kafkaTemplate,
                 "orders.created.v1");
