@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import jakarta.persistence.EntityManager;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,9 @@ class InventoryPersistenceIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @BeforeEach
     void seedStock() {
@@ -92,6 +96,7 @@ class InventoryPersistenceIntegrationTest {
     }
 
     private int processedEventCount(UUID eventId) {
+        entityManager.flush();
         return jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM processed_event WHERE event_id = ?",
                 Integer.class,
