@@ -1,0 +1,9 @@
+spring:
+  kafka:
+    listener:
+      auto-startup: false
+
+app:
+  kafka:
+    topics:
+      order-created: orders.created.v1
