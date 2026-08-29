@@ -11,11 +11,11 @@ import java.util.Objects;
 @Component
 public class KafkaOrderEventPublisher implements OrderEventPublisher {
 
-    private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final String orderCreatedTopic;
 
     public KafkaOrderEventPublisher(
-            KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate,
+            KafkaTemplate<String, Object> kafkaTemplate,
             @Value("${app.kafka.topics.order-created}") String orderCreatedTopic) {
         this.kafkaTemplate = Objects.requireNonNull(kafkaTemplate, "kafkaTemplate must not be null");
         if (orderCreatedTopic == null || orderCreatedTopic.isBlank()) {

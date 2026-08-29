@@ -20,7 +20,7 @@ public class KafkaConsumerRecoveryConfiguration {
 
     @Bean
     CommonErrorHandler kafkaCommonErrorHandler(
-            KafkaTemplate<Object, Object> kafkaTemplate,
+            KafkaTemplate<String, Object> kafkaTemplate,
             @Value("${app.kafka.recovery.backoff-ms:1000}") long backoffMs,
             @Value("${app.kafka.recovery.max-retries:2}") long maxRetries,
             @Value("${app.kafka.recovery.dlt-suffix:.dlt}") String dltSuffix) {
