@@ -44,6 +44,11 @@ app:
       inventory-reserved: ${INVENTORY_RESERVED_TOPIC:inventory.reserved.v1}
       inventory-rejected: ${INVENTORY_REJECTED_TOPIC:inventory.rejected.v1}
 
+    recovery:
+      backoff-ms: ${KAFKA_RETRY_BACKOFF_MS:1000}
+      max-retries: ${KAFKA_MAX_RETRIES:2}
+      dlt-suffix: ${KAFKA_DLT_SUFFIX:.dlt}
+
 server:
   port: 8081
 
