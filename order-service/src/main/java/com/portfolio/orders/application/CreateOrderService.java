@@ -3,6 +3,7 @@ package com.portfolio.orders.application;
 import com.portfolio.orders.application.port.OrderRepository;
 import com.portfolio.orders.domain.Order;
 import com.portfolio.orders.domain.OrderLine;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -16,6 +17,9 @@ public class CreateOrderService {
     private final OrderRepository orderRepository;
     private final Clock clock;
 
+    
+    
+    @Autowired
     public CreateOrderService(OrderRepository orderRepository) {
         this(orderRepository, Clock.systemUTC());
     }
