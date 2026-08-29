@@ -24,11 +24,25 @@ spring:
       acks: all
       properties:
         spring.json.add.type.headers: false
+    consumer:
+      group-id: ${ORDER_INVENTORY_CONSUMER_GROUP:order-service-inventory-outcomes-v1}
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.portfolio.orders.messaging.event.InventoryOutcomeEvent
+        spring.json.trusted.packages: com.portfolio.orders.messaging.event
+    listener:
+      ack-mode: record
 
 app:
   kafka:
     topics:
       order-created: ${ORDER_CREATED_TOPIC:orders.created.v1}
+      inventory-reserved: ${INVENTORY_RESERVED_TOPIC:inventory.reserved.v1}
+      inventory-rejected: ${INVENTORY_REJECTED_TOPIC:inventory.rejected.v1}
 
 server:
   port: 8081
