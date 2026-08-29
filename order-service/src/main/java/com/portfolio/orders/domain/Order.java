@@ -37,12 +37,27 @@ public final class Order {
         this.status = Objects.requireNonNull(status, "status must not be null");
         this.createdAt = Objects.requireNonNull(createdAt, "createdAt must not be null");
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt must not be null");
-        this.rejectionReason = rejectionReason;
+        this.rejectionReason = normalizeRejectionReason(status, rejectionReason);
     }
 
     public static Order place(UUID id, UUID customerId, List<OrderLine> lines, Instant now) {
         Objects.requireNonNull(now, "now must not be null");
         return new Order(id, customerId, lines, OrderStatus.PENDING, now, now, null);
+    }
+
+    /**
+     * Rehydrates an aggregate from trusted persisted state without replaying
+     * lifecycle transitions.
+     */
+    public static Order restore(
+            UUID id,
+            UUID customerId,
+            List<OrderLine> lines,
+            OrderStatus status,
+            Instant createdAt,
+            Instant updatedAt,
+            String rejectionReason) {
+        return new Order(id, customerId, lines, status, createdAt, updatedAt, rejectionReason);
     }
 
     public void confirm(Instant now) {
@@ -86,6 +101,19 @@ public final class Order {
             throw new IllegalArgumentException("order lines must not contain null values");
         }
         return List.copyOf(lines);
+    }
+
+    private static String normalizeRejectionReason(OrderStatus status, String rejectionReason) {
+        if (status == OrderStatus.REJECTED) {
+            if (rejectionReason == null || rejectionReason.isBlank()) {
+                throw new IllegalArgumentException("rejected order must include a rejection reason");
+            }
+            return rejectionReason.trim();
+        }
+        if (rejectionReason != null && !rejectionReason.isBlank()) {
+            throw new IllegalArgumentException("rejection reason is only valid for rejected orders");
+        }
+        return null;
     }
 
     public BigDecimal totalAmount() {
