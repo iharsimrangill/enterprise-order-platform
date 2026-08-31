@@ -1,6 +1,7 @@
 package com.portfolio.orders.api;
 
 import com.portfolio.orders.application.CreateOrderService;
+import com.portfolio.orders.application.OrderQueryService;
 import com.portfolio.orders.domain.Order;
 import com.portfolio.orders.domain.OrderLine;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import java.util.UUID;
 import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -35,6 +37,9 @@ class OrderControllerTest {
 
     @MockitoBean
     private CreateOrderService createOrderService;
+
+    @MockitoBean
+    private OrderQueryService orderQueryService;
 
     @Test
     void returns201ForValidOrder() throws Exception {
@@ -96,4 +101,29 @@ class OrderControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Malformed or unreadable request body"));
     }
+
+    @Test
+    void returnsRecentOrdersForCustomer() throws Exception {
+        when(orderQueryService.findByCustomer(any(), any(Integer.class), any(Integer.class)))
+                .thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/orders")
+                        .param("customerId", CUSTOMER_ID.toString())
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void returnsRecentOrdersForStatus() throws Exception {
+        when(orderQueryService.findByStatus(any(), any(Integer.class), any(Integer.class)))
+                .thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/orders")
+                        .param("status", "PENDING")
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk());
+    }
+
 }
