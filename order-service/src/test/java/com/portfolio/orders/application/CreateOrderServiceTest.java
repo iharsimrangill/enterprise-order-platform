@@ -1,7 +1,7 @@
 package com.portfolio.orders.application;
 
 import com.portfolio.orders.application.event.OrderCreatedEvent;
-import com.portfolio.orders.application.port.OrderEventPublisher;
+import com.portfolio.orders.application.port.OrderOutboxWriter;
 import com.portfolio.orders.application.port.OrderRepository;
 import com.portfolio.orders.domain.Order;
 import com.portfolio.orders.domain.OrderStatus;
@@ -24,7 +24,7 @@ class CreateOrderServiceTest {
     @Test
     void createsPersistsAndPublishesPendingOrder() {
         InMemoryOrderRepository repository = new InMemoryOrderRepository();
-        RecordingOrderEventPublisher publisher = new RecordingOrderEventPublisher();
+        RecordingOrderOutboxWriter publisher = new RecordingOrderOutboxWriter();
         CreateOrderService service = new CreateOrderService(
                 repository,
                 publisher,
@@ -74,12 +74,12 @@ class CreateOrderServiceTest {
         }
     }
 
-    private static final class RecordingOrderEventPublisher implements OrderEventPublisher {
+    private static final class RecordingOrderOutboxWriter implements OrderOutboxWriter {
 
         private OrderCreatedEvent publishedEvent;
 
         @Override
-        public void publish(OrderCreatedEvent event) {
+        public void save(OrderCreatedEvent event) {
             this.publishedEvent = event;
         }
     }
