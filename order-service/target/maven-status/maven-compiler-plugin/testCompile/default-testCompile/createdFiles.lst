@@ -1,0 +1,16 @@
+com/portfolio/orders/persistence/inventoryevent/ProcessedInventoryEventRepositoryAdapterTest.class
+com/portfolio/orders/domain/OrderTest.class
+com/portfolio/orders/api/OrderControllerTest.class
+com/portfolio/orders/application/CreateOrderServiceTest.class
+com/portfolio/orders/application/HandleInventoryOutcomeServiceTest.class
+com/portfolio/orders/messaging/KafkaOrderEventPublisherTest.class
+com/portfolio/orders/application/HandleInventoryOutcomeServiceTest$InMemoryProcessedEventRepository.class
+com/portfolio/orders/application/CreateOrderServiceTest$InMemoryOrderRepository.class
+com/portfolio/orders/domain/OrderLineTest.class
+com/portfolio/orders/messaging/KafkaConsumerRecoveryConfigurationTest.class
+com/portfolio/orders/application/CreateOrderServiceTest$RecordingOrderOutboxWriter.class
+com/portfolio/orders/OrderServiceApplicationTests.class
+com/portfolio/orders/messaging/InventoryOutcomeKafkaListenerTest.class
+com/portfolio/orders/persistence/OrderPersistenceAdapterTest.class
+com/portfolio/orders/messaging/MalformedKafkaPayloadHandlingTest.class
+com/portfolio/orders/application/HandleInventoryOutcomeServiceTest$InMemoryOrderRepository.class
