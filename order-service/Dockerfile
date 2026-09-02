@@ -7,6 +7,7 @@ WORKDIR /workspace
 COPY pom.xml .
 COPY order-service/pom.xml order-service/pom.xml
 COPY inventory-service/pom.xml inventory-service/pom.xml
+COPY notification-service/pom.xml notification-service/pom.xml
 
 RUN mvn -pl order-service -am dependency:go-offline -B
 
