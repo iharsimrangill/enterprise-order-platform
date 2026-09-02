@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.portfolio.orders.application.event.OrderCreatedEvent;
 import com.portfolio.orders.application.port.OrderEventPublisher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,31 +21,47 @@ public class OrderOutboxRelay {
     private final OrderEventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
     private final Clock clock;
+    private final int maxAttempts;
 
     @Autowired
     public OrderOutboxRelay(
             SpringDataOrderOutboxRepository repository,
             OrderEventPublisher eventPublisher,
-            ObjectMapper objectMapper) {
-        this(repository, eventPublisher, objectMapper, Clock.systemUTC());
+            ObjectMapper objectMapper,
+            @Value("${app.outbox.max-attempts:8}") int maxAttempts) {
+        this(
+                repository,
+                eventPublisher,
+                objectMapper,
+                Clock.systemUTC(),
+                maxAttempts);
     }
 
     OrderOutboxRelay(
             SpringDataOrderOutboxRepository repository,
             OrderEventPublisher eventPublisher,
             ObjectMapper objectMapper,
-            Clock clock) {
+            Clock clock,
+            int maxAttempts) {
         this.repository = Objects.requireNonNull(repository);
         this.eventPublisher = Objects.requireNonNull(eventPublisher);
         this.objectMapper = Objects.requireNonNull(objectMapper);
         this.clock = Objects.requireNonNull(clock);
+
+        if (maxAttempts < 1) {
+            throw new IllegalArgumentException("maxAttempts must be at least 1");
+        }
+
+        this.maxAttempts = maxAttempts;
     }
 
     @Scheduled(fixedDelayString = "${app.outbox.poll-interval-ms:1000}")
     @Transactional
     public void publishPendingEvents() {
+        Instant now = Instant.now(clock);
+
         List<OrderOutboxEntity> events =
-                repository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc();
+                repository.findEligibleForRetry(now, maxAttempts);
 
         for (OrderOutboxEntity entity : events) {
             publish(entity);
@@ -52,6 +69,8 @@ public class OrderOutboxRelay {
     }
 
     private void publish(OrderOutboxEntity entity) {
+        Instant now = Instant.now(clock);
+
         entity.recordAttempt();
 
         try {
@@ -61,11 +80,10 @@ public class OrderOutboxRelay {
                             OrderCreatedEvent.class);
 
             eventPublisher.publish(event);
-            entity.markPublished(Instant.now(clock));
+            entity.markPublished(now);
 
         } catch (Exception exception) {
-            // Intentionally leave publishedAt null.
-            // The next scheduled poll retries this event.
+            entity.scheduleRetry(now, exception);
         }
 
         repository.save(entity);
